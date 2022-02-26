@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "csv-parse": "^5.0.4",
+    "google-libphonenumber": "^3.2.27",
+    "lodash": "^4.17.21"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">= 16.14.0",
+    "npm": ">= 8.5.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/batataazul/csvNodeChallange.git"
+  },
+  "license": "Apache 2.0"
+}
