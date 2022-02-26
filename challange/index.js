@@ -1,9 +1,7 @@
 import { parse } from "csv-parse/sync";
 import fs from "fs";
-import pkg  from "lodash";
-const { ld } = pkg;
-import pkg2 from "google-libphonenumber";
-const { glp } = pkg2;
+import ld  from "lodash";
+import glp from "google-libphonenumber";
 
 class CsvParser{
     constructor(path) {
@@ -21,7 +19,18 @@ class CsvParser{
     }
 }
 
+class Student{
+    constructor(){
+        this.receiveData = this.receiveData.bind(this);
+    }
+
+    receiveData(_parser){
+
+    }
+}
+
 (function (){
     let parser = new CsvParser("input.csv");
-    console.log(parser.getData()[0]);
-})()
+    console.log(ld.words(parser.getData()[0][2]));
+    console.log(ld.split("sala 5, sala 6",/ *[^A-Za-z0-9 ] */g))
+})();
