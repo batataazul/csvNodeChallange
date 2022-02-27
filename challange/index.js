@@ -37,16 +37,16 @@ class Students{
     static groups = "groups";
     static array = "array";
     static string = "string";
-    static emailReg = /^[\w\-\.]+@[\w\-]+\.[\w\-]+(\.[a-z]{2})?$/g;
-    static groupReg = / *[^A-Za-z0-9 ] */g;
 
     constructor(_data){
         this.getIndex = this.getIndex.bind(this);
         this.getHeader = this.getHeader.bind(this);
         this._createStudents = this._createStudents.bind(this);
-        this._createAddress = this._createAddress.bind(this);
+        this._createPhone = this._createPhone.bind(this);
+        this._createEmail = this._createEmail.bind(this);
         this.find = this.find.bind(this);
         this.concat = this.concat.bind(this);
+        this._fixAndConcat = this._fixAndConcat.bind(this);
         this.phoneUtil = glp.PhoneNumberUtil.getInstance();
 
         this._data = _data;
@@ -77,78 +77,98 @@ class Students{
         this._data.forEach(i => {
             let student = {};
             student[Students.addresses] = [];
+            student[Students.groups] = [];
             for (let j = 0; j < i.length; j++){
-                switch (this._header[j]) {
-                    case Students.invisible:
-                        if (i[j]){
-                            student[this._header[j]] = true;
-                        } else {
-                            student[this._header[j]] = false;
-                        }
-                        break;
-                    case Students.see_all:
-                        if(i[j] === Students.yes){
-                            student[this._header[j]] = true;
-                        } else {
-                            student[this._header[j]] = false;
-                        }
-                        break;
-                    case Students.group:
-                        student[Students.groups] = ld.split(i[j],Students.groupReg);
-                        break;
-                    default:
-                        if (typeof this._header[j] === Students.string){
-                            student[this._header[j]] = i[j];
-                        } else {
-                            let address = this._createAddress(this._header[j], i[j]);
-                            if (address){
+                if (this._header[j] === Students.invisible || this._header[j] === Students.see_all){
+                    if (i[j] === 1 || i[j] === Students.yes){
+                        student[this._header[j]] = true;
+                    } else {
+                        student[this._header[j]] = false;
+                    }
+                } else if(this._header[j] === Students.group){
+                    let groupReg = new RegExp(" *[^A-Za-z0-9 ] *", "g");
+                    let groupArr = ld.split(i[j], groupReg);
+                    for (let w = 0; w < groupArr.length; w++){
+                        let spaceBegReg = RegExp("^ ","g");
+                        let spaceEndReg = RegExp(" $", "g");
+                        groupArr[w] = groupArr[w].replace(spaceBegReg,"");
+                        groupArr[w] = groupArr[w].replace(spaceEndReg, "");
+                    }
+                    student[Students.groups].push(groupArr);
+                }
+                else if (typeof this._header[j] === Students.string){
+                    student[this._header[j]] = i[j];
+                } else {
+                    let address;
+                    if (this._header[j][0] === Students.email){
+                        let emailReg2 = new RegExp("[/ ,]", "g");
+                        let addressList = ld.split(i[j],emailReg2);
+                        addressList.forEach((element)=>{
+                            address = this._createEmail(this._header[j],element);
+                            if (address) {
                                 student[Students.addresses].push(address);
                             }
+                        })
+                    } else{
+                        address = this._createPhone(this._header[j], i[j]);
+                        if (address){
+                            student[Students.addresses].push(address);
                         }
-                        break;
+                    }
                 }
             }
-            let index = this.getIndex(student[Students.eid]);
-            if (!this.studentList[index]){
-                this.studentList[index] = [student];
-            } else if (this.studentList[index][0][Students.eid] === student[Students.eid]){
-                this.concat(student,index,0);
-            } else {
-                let newIndex = this._find(index,student);
-                if (newIndex >= 0){
-                    this.concat(student, index,newIndex);
-                } else {
-                    this.studentList[index].push(student);
-                }
-            }
+            this._fixAndConcat(student);
         });
         this.studentList = ld.flatten(this.studentList);
         this.studentList = ld.without(this.studentList,undefined,null);
     }
-
-    _createAddress(header,address){
+    
+    _fixAndConcat(student){
+        student[Students.groups] = ld.flatten(student[Students.groups]);
+        student[Students.groups] = ld.without(student[Students.groups], "", " ", undefined, null);
+        let index = this.getIndex(student[Students.eid]);
+        if (!this.studentList[index]) {
+            this.studentList[index] = [student];
+        } else if (this.studentList[index][0][Students.eid] === student[Students.eid]) {
+            this.concat(student, index, 0);
+        } else {
+            let newIndex = this._find(index, student);
+            if (newIndex >= 0) {
+                this.concat(student, index, newIndex);
+                console.log("oi " + String(student[Students.groups]));
+            } else {
+                this.studentList[index].push(student);
+            }
+        }
+    }
+    _createPhone(header,address){
         let type = header[0];
         let tags = ld.drop(header,1);
         let addressObj = {
             "type" : type,
             "tags" : tags
         }
-        switch (type) {
-            case Students.phone:
-                if (this.phoneUtil.isPossibleNumberString(address)) {
-                    addressObj[Students.address] = this.phoneUtil.parse(address, "BR");
-                }else{
-                    return;
-                }
-                break;
-        
-            case Students.email:
-                if (Students.emailReg.test(address)){
-                    addressObj[Students.address] = address;
-                } else{
-                    return;
-                }
-                break;
+        if (this.phoneUtil.isPossibleNumberString(address,"BR")) {
+            addressObj[Students.address] = String(this.phoneUtil.parseAndKeepRawInput(address, "BR").getCountryCodeOrDefault()) + 
+            String(this.phoneUtil.parseAndKeepRawInput(address,"BR").getNationalNumber());
+        }else{
+            return;
+        }
+        return addressObj;
+    }
+
+    _createEmail(header, address){
+        let emailReg = new RegExp("[\\w\\-\\.]+@[\\w\\-]+\\.[\\w\\-]+(\\.[a-z]{2})?", "g");
+        let type = header[0];
+        let tags = ld.drop(header, 1);
+        let addressObj = {
+            "type": type,
+            "tags": tags
+        }
+        if (emailReg.test(address)) {
+            addressObj[Students.address] = address;
+        } else {
+            return;
         }
         return addressObj;
     }
@@ -166,6 +186,8 @@ class Students{
     }
 
     concat(student,index,newIndex){
+        //console.log(this.studentList[index][newIndex]);
+        //console.log(student);
         this.studentList[index][newIndex][Students.addresses] = ld.uniqBy(ld.concat(
             this.studentList[index][newIndex][Students.addresses], student[Students.addresses]));
         this.studentList[index][newIndex][Students.groups] = ld.uniqBy(ld.concat(
