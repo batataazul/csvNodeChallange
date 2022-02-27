@@ -51,8 +51,7 @@ class Students{
 
         this._data = _data;
         this._header = this.getHeader();
-        console
-        this._size = this._data.length
+        this._size = this._data.length;
         this.studentList = new Array(this._size);
         this._createStudents();
     }
@@ -135,7 +134,6 @@ class Students{
             let newIndex = this._find(index, student);
             if (newIndex >= 0) {
                 this.concat(student, index, newIndex);
-                console.log("oi " + String(student[Students.groups]));
             } else {
                 this.studentList[index].push(student);
             }
@@ -186,8 +184,6 @@ class Students{
     }
 
     concat(student,index,newIndex){
-        //console.log(this.studentList[index][newIndex]);
-        //console.log(student);
         this.studentList[index][newIndex][Students.addresses] = ld.uniqBy(ld.concat(
             this.studentList[index][newIndex][Students.addresses], student[Students.addresses]));
         this.studentList[index][newIndex][Students.groups] = ld.uniqBy(ld.concat(
