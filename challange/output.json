@@ -1,0 +1,94 @@
+[
+    {
+        "addresses": [
+            {
+                "type": "email",
+                "tags": [
+                    "Student"
+                ],
+                "address": "mary.knight@exemplo.com"
+            },
+            {
+                "type": "email",
+                "tags": [
+                    "Financial",
+                    "Responsible"
+                ],
+                "address": "mom.knight@exemplo.com"
+            }
+        ],
+        "fullname": "Mary Knight",
+        "eid": 105,
+        "groups": [
+            "Sala 5",
+            "Sala 6"
+        ],
+        "invisible": true,
+        "see_all": false
+    },
+    {
+        "addresses": [
+            {
+                "type": "email",
+                "tags": [
+                    "Financial",
+                    "Responsible"
+                ],
+                "address": "mom.littleton@exemplo.com"
+            }
+        ],
+        "fullname": "Jack Littleton",
+        "eid": 106,
+        "groups": [
+            ""
+        ],
+        "invisible": false,
+        "see_all": false
+    },
+    {
+        "addresses": [
+            {
+                "type": "email",
+                "tags": [
+                    "Pedagogical",
+                    "Responsible"
+                ],
+                "address": "dad.goldman@exemplo.com"
+            }
+        ],
+        "fullname": "Kate Goldman",
+        "eid": 107,
+        "groups": [
+            "Sala 7"
+        ],
+        "invisible": false,
+        "see_all": true
+    },
+    {
+        "addresses": [
+            {
+                "type": "email",
+                "tags": [
+                    "Pedagogical",
+                    "Responsible"
+                ],
+                "address": "dad.appleseed@exemplo.com"
+            },
+            {
+                "type": "email",
+                "tags": [
+                    "Student"
+                ],
+                "address": "john.appleseed1@exemplo.com"
+            }
+        ],
+        "fullname": "John Appleseed",
+        "eid": 104,
+        "groups": [
+            "Sala 3",
+            " Sala 6"
+        ],
+        "invisible": true,
+        "see_all": false
+    }
+]

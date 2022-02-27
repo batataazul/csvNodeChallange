@@ -1,6 +1,6 @@
 import { parse } from "csv-parse/sync";
 import fs from "fs";
-import ld, { add }  from "lodash";
+import ld from "lodash";
 import glp from "google-libphonenumber";
 
 class CsvParser{
@@ -8,8 +8,12 @@ class CsvParser{
         this.getData = this.getData.bind(this);
         let data;
         (async function () {
-            const text = fs.readFileSync(path,"utf-8");
-            data = parse(text, { cast: true });
+            try { 
+                const text = fs.readFileSync(path, "utf-8");
+                data = parse(text, { cast: true });
+            } catch (err){
+                console.log(err);
+            }
         })();
         this._data = data;
     }
@@ -39,14 +43,15 @@ class Students{
     constructor(_data){
         this.getIndex = this.getIndex.bind(this);
         this.getHeader = this.getHeader.bind(this);
-        this.createStudents = this._createStudents.bind(this);
-        this.createAddress = this._createAddress.bind(this);
+        this._createStudents = this._createStudents.bind(this);
+        this._createAddress = this._createAddress.bind(this);
         this.find = this.find.bind(this);
         this.concat = this.concat.bind(this);
         this.phoneUtil = glp.PhoneNumberUtil.getInstance();
 
         this._data = _data;
         this._header = this.getHeader();
+        console
         this._size = this._data.length
         this.studentList = new Array(this._size);
         this._createStudents();
@@ -60,7 +65,7 @@ class Students{
         let header = this._data[0];
         this._data = ld.drop(this._data,1);
         for (let i = 0; i < header.length; i++){
-            let aux = ld.words(header[i]);
+            let aux = ld.split(header[i]," ");
             if (aux.length > 1){
                 header[i] = aux;
             }
@@ -71,31 +76,31 @@ class Students{
     _createStudents(){
         this._data.forEach(i => {
             let student = {};
-            student[Students.address] = [];
-            for (j = 0; j < i.length; j++){
-                switch (this.header[j]) {
+            student[Students.addresses] = [];
+            for (let j = 0; j < i.length; j++){
+                switch (this._header[j]) {
                     case Students.invisible:
                         if (i[j]){
-                            student[header[j]] = true;
+                            student[this._header[j]] = true;
                         } else {
-                            student[header[j]] = false;
+                            student[this._header[j]] = false;
                         }
                         break;
                     case Students.see_all:
                         if(i[j] === Students.yes){
-                            student[header[j]] = true;
+                            student[this._header[j]] = true;
                         } else {
-                            student[header[j]] = false;
+                            student[this._header[j]] = false;
                         }
                         break;
                     case Students.group:
-                        student[Students.groups] = ld.split(address,Students.groupReg);
+                        student[Students.groups] = ld.split(i[j],Students.groupReg);
                         break;
                     default:
-                        if (typeof header[j] === Students.string){
-                            student[header[j]] = i[j];
+                        if (typeof this._header[j] === Students.string){
+                            student[this._header[j]] = i[j];
                         } else {
-                            let address = this._createAddress(header[j], i[j]);
+                            let address = this._createAddress(this._header[j], i[j]);
                             if (address){
                                 student[Students.addresses].push(address);
                             }
@@ -118,26 +123,27 @@ class Students{
             }
         });
         this.studentList = ld.flatten(this.studentList);
+        this.studentList = ld.without(this.studentList,undefined,null);
     }
 
     _createAddress(header,address){
         let type = header[0];
         let tags = ld.drop(header,1);
-        addressObj = {
+        let addressObj = {
             "type" : type,
             "tags" : tags
         }
         switch (type) {
             case Students.phone:
-                if (this.phoneUtil.isValidNumberForRegion(this.phoneUtil.parse(address, "BR")), "BR") {
-                    addressObj[Students.address] = address;
+                if (this.phoneUtil.isPossibleNumberString(address)) {
+                    addressObj[Students.address] = this.phoneUtil.parse(address, "BR");
                 }else{
                     return;
                 }
                 break;
         
             case Students.email:
-                if (this.emailReg.test(address)){
+                if (Students.emailReg.test(address)){
                     addressObj[Students.address] = address;
                 } else{
                     return;
@@ -170,5 +176,9 @@ class Students{
 (function (){
     let parser = new CsvParser("input.csv");
     let studentList = new Students(parser.getData());
-    console.log(studentList.studentList,4);
+    try {
+        fs.writeFileSync("output.json", JSON.stringify(studentList.studentList, null, 4));
+    } catch (err){
+        console.log(err);
+    }
 })();
